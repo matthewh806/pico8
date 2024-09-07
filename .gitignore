@@ -1,2 +1,3 @@
 *.DS_STORE
 scratch.p8
+builds/*
