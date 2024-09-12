@@ -118,7 +118,7 @@ function inittmg()
 	tama.mistakes=0
 	tama.careneeded=false
 	tama.dead=false
-	tama.sleeping=true
+	tama.sleeping=false
 	-- in minutes
 	tama.starvingtime=0
 	tama.sleeptime=0
@@ -430,14 +430,16 @@ function dofunction()
 		--food
 		tmg.hunger=min(4,tmg.hunger+1)
 		tmg.starvingtime=0
+		setcareneeded(false)
 	elseif selfn == 1 then
-	-- light
-	light=not light
+		-- light
+		light=not light
 	
 	elseif selfn == 2 then
 		--game
 		tmg.happy=min(4,tmg.happy+1)
 		-- reduce weight
+		setcareneeded(false)
 	
 	elseif selfn == 3 then
 	--health
@@ -551,8 +553,21 @@ function updatestats()
 	and clock.s%60==0
 	then
 		tmg.sick=true
+		setcareneeded(true)
 	end
+	
+	if tmg.careneeded
+	and clock.s%60==0
+	then
+		-- todo make the call periodically?
+		sfx(0)
+	end
+	
 
+end
+
+function setcareneeded(needs)
+	tmg.careneeded=needs
 end
 
 function updateclock()
@@ -716,3 +731,5 @@ __gfx__
 00000000008888888888800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000888888888000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000008888800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+__sfx__
+00030000347003470034700017003470033700000000000000000000000000000000000000000000000000003275000000000001d00000000377500070000000377503a750000000000000000000000000000000
