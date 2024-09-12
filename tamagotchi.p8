@@ -118,8 +118,11 @@ function inittmg()
 	tama.mistakes=0
 	tama.careneeded=false
 	tama.dead=false
+	tama.sleeping=true
 	-- in minutes
 	tama.starvingtime=0
+	tama.sleeptime=0
+	tama.sleeppunished=false
 	
 	tama.maxmistakes=8
 	tama.maxstarvetime=720
@@ -244,6 +247,8 @@ function start_game()
 	evolve_tmg(egg_stats)
 	selfn=0
 	
+	light=true
+	
 	poos={}
 	
 	--allow a settable clock
@@ -281,19 +286,22 @@ function update_game()
 		dofunction()
 	end
 	
-	if(t%20==0) then
-			-- randomly change dir
-			if rnd() < 0.1 then
+	if not tmg.sleeping
+	then
+		if(t%20==0) then
+				-- randomly change dir
+				if rnd() < 0.1 then
+					tmg.sx*=-1
+				end
+		end
+		
+		if(t%5==0) then		
+			tmg.x+=tmg.sx
+			
+			if tmg.x > 111 
+			or tmg.x < 16 then
 				tmg.sx*=-1
 			end
-	end
-	
-	if(t%5==0) then		
-		tmg.x+=tmg.sx
-		
-		if tmg.x > 111 
-		or tmg.x < 16 then
-			tmg.sx*=-1
 		end
 	end
 	
@@ -303,31 +311,39 @@ function draw_game()
 	drawstats()
 	drawfunctions()
 	
-	if tmg.evolving then
-		if not tmg.evolanimfin then
-			draw_evolution()
-		end
+	if not light then
+		rectfill(0,30,128,105,0)
 	else
-		draw_animate()
-	end 
-	
-	
-	spr(tmg.spr, 
-					tmg.x, tmg.y, 
-					tmg.sprw, tmg.sprh,
-					tmg.sx>0)
-	for x in all(poos) do
-		spr(poo_anim[t%8+1], x, tmg.y+8,1,1)
+		rectfill(0,30,128,105,13)
+		if tmg.evolving then
+			if not tmg.evolanimfin then
+				draw_evolution()
+			end
+		else
+			draw_animate()
+		end 
+		
+		spr(tmg.spr, 
+						tmg.x, tmg.y, 
+						tmg.sprw, tmg.sprh,
+						tmg.sx>0)
+		for x in all(poos) do
+			spr(poo_anim[t%8+1], x, tmg.y+8,1,1)
+		end
+		
+		if tmg.sick then
+			spr(82, 
+							tmg.x+8*tmg.sprw,
+							tmg.y-8)
+		end
 	end
 	
-	if tmg.sick then
-		spr(82, 
-						tmg.x+8*tmg.sprw,
-						tmg.y-8)
+	if tmg.sleeping then
+		print("z...", tmg.x-2, tmg.y-8,7)
 	end
 					
 	--draw clock
-	print("day:"..clock.d.." h: "..clock.h.. " m: "..clock.m.. " s: "..clock.s,8,110)
+	print("day:"..clock.d.." h: "..clock.h.. " m: "..clock.m.. " s: "..clock.s,8,110,7)
 end
 
 function update_over()
@@ -415,7 +431,8 @@ function dofunction()
 		tmg.hunger=min(4,tmg.hunger+1)
 		tmg.starvingtime=0
 	elseif selfn == 1 then
-	--light
+	-- light
+	light=not light
 	
 	elseif selfn == 2 then
 		--game
@@ -465,6 +482,32 @@ function updatestats()
 		tmg.evolving=true
 		tmg.evolanimfin=false
 		return
+	end
+	
+	if clock.h%21==0 then
+		tmg.sleeping=true
+		tmg.sleeptime=0
+		tmg.sleeppunished=false
+	end
+	
+	if clock.h%7==0 then
+		tmg.sleeping=false
+	end
+	
+	if tmg.sleeping 
+	and minute%60==0 
+	and clock.s%60==0
+	then
+		tmg.sleeptime+=1
+	end
+	
+	if tmg.sleeping 
+	and tmg.sleeptime==5
+	and not tmg.sleeppunished
+	and light
+	then
+		tmg.mistake+=1
+		tmg.sleeppunished=true
 	end
 	
 	if minute%tmg.frpoo==0 
