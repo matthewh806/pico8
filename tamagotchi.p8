@@ -457,7 +457,10 @@ function dofunction()
 	
 	elseif selfn == 6 then
 	--discipline
-	
+		if tmg.sleeping then
+	        	tmg.sleeping = false
+	        	tmg.happy=max(0,tmg.happy-2)
+	    	end
 	end
 
 end
